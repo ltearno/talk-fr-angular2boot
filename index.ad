@@ -1,0 +1,293 @@
+= Angular 2 Boot
+:author: Arnaud Tournier - LTE Consulting
+:email: ltearno@gmail.com
+:backend: revealjs
+:deckjs_theme: neon
+:revealjs_theme: moon
+:revealjs_history: true
+:imagesdir: images
+:source-highlighter: highlightjs
+////
+:source-highlighter: coderay
+:revealjs_transition: zoom
+:source-highlighter: pygments
+////
+
+== Arnaud Tournier
+
+Archi-dev et formateur chez **LTE Consulting**.
+
+Speaker **Devoxx**, **Paris**/**Toulouse JUG**, **GWT.create**, etc...
+
+Email : ltearno@gmail.com
+
+Twitter : https://twitter.com/ltearno[@ltearno]
+
+Web : http://www.lteconsulting.fr[www.lteconsulting.fr]
+
+Full stack (x86_64 to JavaScript)
+
+== Angular 2 Boot ?
+
+Une expérience...
+
+Projet Open Source permettant d'utiliser Angular 2 avec le langage Java 8.
+
+http://lteconsulting.fr/angular2boot/[lteconsulting.fr/angular2boot/]
+
+[NOTE.speaker]
+--
+Qui ici (a) fait du Java ? En refera ?
+
+Qui a un backend Java et front en JS ?
+
+Java permet de maitriser la complexité d'une grosse base de code (donc plutot grosses applications). Taille moyenne des applications GWT : au moins 100000 loc.
+--
+
+=== Facile à essayer
+
+[source]
+----
+mvn archetype:generate \
+  -DarchetypeGroupId=fr.lteconsulting \
+  -DarchetypeArtifactId=angular2-gwt.archetype \
+  -DarchetypeVersion=1.1
+  
+mvn clean install
+
+java -jar target/YOUR_ARTIFACT_ID.jar
+----
+
+=== Développement Live reload
+
+[source]
+----
+# Partie serveur
+mvn spring-boot:run
+
+# Partie client
+mvn gwt:run-codeserver
+----
+
+=== Production
+
+[source]
+----
+# produit un fichier .war
+mvn clean install
+----
+
+[data-background="images/ingredients.jpg"]
+== Ingrédients
+
+=== Angular 2
+
+- non invasif,
+- performant,
+- architecture moderne, simple et efficace.
+
+=== GWT 2.8
+
+- **Java 8** (typage fort, lambdas, streams, ...)
+- **JsInterop** (integration js facile)
+- **SuperDevMode** (live reload)
+- Compilation très **optimisée** (taile js --)
+
+=== Spring Boot
+
+- Application serveur standalone,
+- Facile à configurer,
+- API très riche (basé sur Spring),
+- _Angular2Boot fonctionne avec n'importe quel backend_.
+
+== Architecture et Fonctionnement
+
+[%notitle]
+[data-transition=fade]
+[data-background="images/archi-survol.png"]
+[data-background-size=contain]
+=== .
+
+[%notitle]
+[data-transition=fade]
+[data-background-size=contain]
+[data-background="images/archi-runtime.png"]
+=== .
+
+
+[%notitle]
+[data-transition=fade]
+[data-background-size=contain]
+[data-background="images/archi-runtime-zoom.png"]
+=== .
+
+
+[%notitle]
+[data-transition=fade]
+[data-background-size=contain]
+[data-background="images/archi-compil.png"]
+=== .
+
+
+[%notitle]
+[data-transition=fade]
+[data-background-size=contain]
+[data-background="images/archi-compil-zoom.png"]
+=== .
+
+
+[%notitle]
+[data-transition=fade]
+[data-background-size=contain]
+[data-background="images/archi-sdm.png"]
+=== .
+
+
+[%notitle]
+[data-transition=fade]
+[data-background-size=contain]
+[data-background="images/archi-sdm-zoom.png"]
+=== .
+
+== JsInterop
+
+On fait parler Java et Javascript ensemble...
+
+- Java peut appeler Javascript
+- Javascript peut utiliser Java
+
+=== JsInterop
+
+Pour utiliser du JS, on décrit le type en Java :
+
+[source,language="java"]
+----
+@JsType( isNative = true )
+public class XMLHttpRequest
+{
+  @JsMethod
+  public native void open( String method, String url );
+
+  @JsMethod
+  public native void send( Object data );
+
+  // ...
+}
+----
+
+=== JsInterop
+
+Puis on l'utilise comme si de rien n'était...
+
+[source,java]
+----
+XMLHttpRequest req = new XMLHttpRequest();
+
+req.open( "GET", "service.json" );
+req.setOnreadystatechange( (event) -> {
+  ...
+};
+
+req.send( ... );
+----
+
+=== JsInterop
+
+Pour exporter une classe Java vers JS, on place les annotations...
+
+[source,java]
+----
+package fr.lteconsulting;
+
+@JsType
+public class Robot
+{
+  @JsProperty
+  private boolean wifiOn;
+
+  @JsConstructor
+  public Robot( DataService dataService ) { ... }
+
+  @JsMethod
+  protected void avance() { ... }
+}
+----
+
+=== JsInterop
+
+Puis en JS :
+
+[source,javascript]
+----
+let robot = new fr.lteconsulting.Robot( dataService )
+
+robot.wifiOn = true
+
+robot.avance()
+----
+
+=== JsInterop
+
+Donc **Java** peut fournir des composants au runtime **Angular**.
+
+Et vice-versa.
+
+== Métadonnées
+
+Angular a besoin de méta-données sur les composants (_DI, routing, inputs/ouputs, ..._)
+
+Angular utilise les **décorateurs** ES7/Typescript (ex *@Component()*).
+
+Cela permet au développeur d'écrire moins de _boilerplate_.
+
+=== en Java ?
+
+Les annotations peuvent jouer le rôle des décorateurs (ex *@Component*).
+
+On peut générer du code portant les informations de type pour le runtime Angular au moment de la compilation.
+
+- on utilise la JSR-269 pour générer les RTTI,
+- on utilise l'api JS d'Angular pour fournir les RTTI.
+
+== Démo !
+
+== Cas d'utilisation
+
+- Applications 100% Java (petite ou grosse),
+- Implémentation de services en Java (interfaçage typé avec un Web service implémenté en Java),
+- Intégration JS/Typescript/Java,
+- Avec JHipster...
+
+== Problèmes rencontrés
+
+- Le code d'Angular utilise `instanceof`, obligé de le forker.
+- Les objets JSON provenants du serveur doivent être convertis...
+
+== Roadmap
+
+[NOTE.speaker]
+--
+Zones : montrer que l'on sort de la zone avec les timers GWT (non monkey patched par zone.js) et avec les appels à WebSpeechAPI
+
+Montrer comment intégrer Java et JS : un Component écrit en Typescript avec un Component Java. Pourquoi pas aussi un Component Java avec des Widgets GWT. Le top serait de montrer un débug dans chrome avec une partie TS et une partie Java.
+--
+
+- Routeur à mettre à jour,
+- Génération du Typescript definition language pour les composants écrits en Java,
+- Plus si affinité...
+
+== Conclusion
+
+- Testé sur de petits projets, très agréable.
+- Rajeunit GWT ! (n'utilise que le coeur).
+- (IMHO) En profiter pour oublier certaines "_conventions_" java (getter/setter, nommage, ...).
+
+Si vous êtes intéressé par le projet, n'hésitez pas à demander pour le mettre en place !
+
+== Questions ?
+
+== Merci ! A bientôt
+
+Les slides sont disponibles ici :
+
+http://www.lteconsulting.fr/angular2boot-talk/[www.lteconsulting.fr/angular2boot-talk/]
